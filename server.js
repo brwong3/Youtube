@@ -8,12 +8,10 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-app.get('/search/:searchTerm', async(req,res) => {
+app.get('/search/:searchTerm/', async(req,res) => {
 
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-
-
 
 
     await page.goto(`https://www.youtube.com/results?search_query=${req.params.searchTerm}`)
@@ -26,39 +24,27 @@ app.get('/search/:searchTerm', async(req,res) => {
         Get Length of Video
     */
 
-    // let scrapedArtists = await page.evaluate(() => 
-    //     Array.from(document.querySelectorAll("[id=dismissile] >.style-scope.ytd-channel-name > .yt-simple-endpoint.style-scope.yt-formatted-string"))
-    //         .map(link => {
-    //             return link.textContent;
-    //         })    
-    // )
+    await page.evaluate(() => 
+        scrollTo(0, 500)
+    )
 
-    // let scrapedData = await page.evaluate(() =>
-    //     Array.from(document.querySelectorAll('.ytd-video-renderer #video-title'))
-    //         .map(link => 
-    //         {
-    //             return {
-    //                 Title: link.getAttribute('title'),
-    //                 Link: `https://www.youtube.com${link.getAttribute('href')}`,
-    //             }
-    //         })
-    //         .slice(0, 30)
-    // ) 
-
-    await scrollPageToBottom(page);
-
-    let scrapedData = await page.evaluate(() => 
-        Array.from(document.querySelectorAll("div#dismissible"))
+    try {
+        let scrapedData = await page.evaluate(() => 
+        Array.from(document.querySelectorAll("div#dismissible.ytd-video-renderer"))
             .map(element => {
                 return {
-                    Thumbnail: element.querySelector("ytd-thumbnail > a > yt-image > img").getAttribute("src")
+                    Thumbnail: element.querySelector("ytd-thumbnail > a > yt-image > img").getAttribute("src"),
+                    Title: element.querySelector(".text-wrapper > #meta > #title-wrapper > h3 > a").getAttribute("title"),
+                    Artist: element.querySelector(".text-wrapper > #channel-info > ytd-channel-name > #container > #text-container > yt-formatted-string > a").textContent,
+                    Link: `https://youtube.com${element.querySelector("ytd-thumbnail > a").getAttribute("href")}`,
+                    Length: null
                 }
             })
-            .slice(0,20)
-    )
-    
-
-    res.send(scrapedData)
+        )
+        res.send(scrapedData);
+    } catch (error) {
+        res.status(404);
+    }
 })
 
 
