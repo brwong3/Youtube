@@ -36,12 +36,13 @@ app.get('/search/:searchTerm/:number', async(req,res) => {
                         clearInterval(timer);
                             resolve(true);
                     }
-                }, 50);
+                }, 100);
                 });
         }, scroll_number);
     }
 
     await autoScroll(page, 12)
+    //ytd-thumbnail > #thumbnail > #overlays
 
     try {
         let scrapedData = await page.evaluate(() => {
@@ -52,11 +53,11 @@ app.get('/search/:searchTerm/:number', async(req,res) => {
                         Title: element.querySelector(".text-wrapper > #meta > #title-wrapper > h3 > a").getAttribute("title"),
                         Artist: element.querySelector(".text-wrapper > #channel-info > ytd-channel-name > #container > #text-container > yt-formatted-string > a").textContent,
                         Link: `https://youtube.com${element.querySelector("ytd-thumbnail > a").getAttribute("href")}`,
-                        Length: null
+                        //Length: element.querySelector("ytd-thumbnail > #thumbnail > #overlays > ytd-thumbnail-overlay-time-status-renderer > span").textContent
                     }
                 })}
             )
-            res.send(scrapedData);
+            res.send(scrapedData.slice(0, req.params.number));
     } catch (error) {
         res.status(404);
     }
