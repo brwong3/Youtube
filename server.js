@@ -24,6 +24,25 @@ app.get('/search/:searchTerm/:number', async(req,res) => {
         Get Length of Video
     */
 
+    async function autoScroll(page, scroll_number) {
+        await page.evaluate(async (scroll_number) => {
+            await new Promise((resolve) => {
+                let totalHeight = 0;
+                const timer = setInterval(() => {
+                    const scrollHeight = window.innerHeight * scroll_number;
+                    window.scrollBy(0, window.innerHeight);
+                    totalHeight += window.innerHeight;
+                    if (totalHeight > scrollHeight) {
+                        clearInterval(timer);
+                            resolve(true);
+                    }
+                }, 50);
+                });
+        }, scroll_number);
+    }
+
+    await autoScroll(page, 12)
+
     try {
         let scrapedData = await page.evaluate(() => {
             return Array.from(document.querySelectorAll("div#dismissible.ytd-video-renderer"))
@@ -37,7 +56,7 @@ app.get('/search/:searchTerm/:number', async(req,res) => {
                     }
                 })}
             )
-            res.send(scrapedData.slice(0, req.params.number));
+            res.send(scrapedData);
     } catch (error) {
         res.status(404);
     }
